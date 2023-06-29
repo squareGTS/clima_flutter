@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/location.dart';
-import 'package:http/http.dart' as http;
+import '../services/networking.dart';
+import 'location_screen.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+
+const apiKey = 'dde46d07224f389c0a58b77a6334998a';
 
 class LoadingScreen extends StatefulWidget {
   @override
@@ -8,52 +12,46 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
+  double? longitude;
+  double? latitude;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
-    getLocation();
-    getData();
+    getLocationData();
   }
 
-  void getLocation() async {
+  void getLocationData() async {
     Location location = Location();
 
     await location.getCurrentLocation();
 
-    print(location.longitude);
-    print(location.latitude);
-  }
+    longitude = location.longitude;
+    latitude = location.latitude;
 
-  void getData() async {
-    final client = http.Client();
+    var url = Uri.http('api.openweathermap.org', '/data/2.5/weather', {
+      'lat': '$latitude',
+      'lon': '$longitude',
+      'appid': '$apiKey'
+    });
 
-    var url = Uri.http(
-        'https://api.openweathermap.org/data/2.5/weather?lat=37.3292&lon=-121.889&appid=dde46d07224f389c0a58b77a6334998a');
-    http.Response response = await http.get(url);
+    NetworkHelper networkHelper = NetworkHelper(uri: url);
 
-    if (response.statusCode == 200) {
-      print("333");
-      String data = response.body;
-      print(data);
-    } else {
-      print("666");
-      print(response.statusCode);
-    }
+    var weatheData = await networkHelper.getData();
+
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return LocationScreen();
+    }));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: TextButton(
-          onPressed: () {
-            //Get the current location
-          },
-          child: const Text('Get Location'),
-        ),
-      ),
+    body: Center(child: SpinKitDoubleBounce(
+      color: Colors.white,
+      size: 100.0,
+    ),),
     );
   }
 }
