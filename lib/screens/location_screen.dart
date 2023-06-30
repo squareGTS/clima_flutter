@@ -14,10 +14,10 @@ class LocationScreen extends StatefulWidget {
 class _LocationScreenState extends State<LocationScreen> {
   WeatherModel weather = WeatherModel();
 
-  int? temperature;
-  String? weatherIcon;
+  int temperature = 0;
+  String weatherIcon = "";
   String? cityName;
-  String weatherMessage;
+  String? weatherMessage;
 
   @override
   void initState() {
@@ -27,10 +27,17 @@ class _LocationScreenState extends State<LocationScreen> {
 
   void updateUI(dynamic weatherData) {
     setState(() {
+      if (weatherData == null) {
+        temperature = 0;
+        weatherIcon = 'Error';
+        weatherMessage = 'Unable to get weather data';
+        cityName = '';
+        return;
+      }
       double temp = weatherData['main']['temp'];
       temperature = temp.toInt();
       weatherIcon = weather.getWeatherIcon(weatherData['weather'][0]['id']);
-      weatherMessage = weather.getMessage(weatherData['main']['temp']);
+      weatherMessage = weather.getMessage(temperature);
       cityName = weatherData['name'];
     });
   }
@@ -57,7 +64,10 @@ class _LocationScreenState extends State<LocationScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      var weatherData = await weather.getLocationWeather();
+                      updateUI(weatherData);
+                    },
                     child: const Icon(
                       Icons.near_me,
                       size: 50.0,
@@ -87,7 +97,7 @@ class _LocationScreenState extends State<LocationScreen> {
                   ],
                 ),
               ),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(right: 15.0),
                 child: Text(
                   '$weatherMessage in $cityName',
@@ -102,11 +112,3 @@ class _LocationScreenState extends State<LocationScreen> {
     );
   }
 }
-
-// double temperature = decodedData['main']['temp'];
-// int condition = decodedData['weather'][0]['id'];
-// String cityName = decodedData(data)['name'];
-//
-// print(temperature);
-// print(condition);
-// print(cityName);
